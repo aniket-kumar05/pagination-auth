@@ -20,6 +20,7 @@ export const loginSchema = z.object({
     .min(6, "Password must be at least 6 characters long"),
 });
 type LoginFormValues = z.infer<typeof loginSchema>;
+
 export function Login() {
   const {
     register,
