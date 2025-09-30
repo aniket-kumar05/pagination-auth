@@ -1,103 +1,184 @@
-import Image from "next/image";
 
-export default function Home() {
+"use client";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useUser } from "./hook/user";
+import { useState, useEffect } from "react";
+
+function Home() {
+  const { user, setUser, isLoading } = useUser();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [image, setImage] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [editing, setEditing] = useState(false);
+
+  const [originalData, setOriginalData] = useState({ name: "", email: "", image: "" });
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name || "");
+      setEmail(user.email || "");
+      setImage(user.image || "");
+      setOriginalData({
+        name: user.name || "",
+        email: user.email || "",
+        image: user.image || "",
+      });
+    }
+  }, [user]);
+
+  // Handle Image Upload
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        setImage(result.url);
+        alert("Image uploaded successfully!");
+      } else {
+        alert("Failed to upload image");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("Error uploading image");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Handle Profile Update
+  const handleUpdate = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/user/update", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name, email, image }),
+      });
+
+      const result = await res.json();
+      console.log("Update result:", result);
+
+      if (res.ok) {
+        setUser(result.user);
+        setOriginalData({ name, email, image });
+        alert("Profile updated successfully!");
+        setEditing(false);
+      } else {
+        alert(result.error || "Update failed");
+      }
+    } catch (error) {
+      console.error("Update error:", error);
+      alert("Error updating profile");
+    }
+  };
+
+  // Cancel editing
+  const handleCancel = () => {
+    setName(originalData.name);
+    setEmail(originalData.email);
+    setImage(originalData.image);
+    setEditing(false);
+  };
+
+  if (isLoading) return <div className="max-w-md mx-auto py-8 px-5">Loading...</div>;
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="max-w-md mx-auto py-8 px-5">
+      <h1 className="text-2xl font-bold mb-6">My Profile</h1>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+      {/* Profile Image */}
+      <div className="flex flex-col items-center gap-3 mb-6">
+        <img
+          src={image || "/default-avatar.png"}
+          alt="Profile"
+          className="w-32 h-32 rounded-full object-cover border-2 border-gray-300"
+        />
+        {editing && (
+          <p className="text-sm text-gray-500">
+            {uploading ? "Uploading..." : "Click below to change photo"}
+          </p>
+        )}
+      </div>
+
+      {/* Image Upload */}
+      {editing && (
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 mb-6 cursor-pointer hover:border-teal-500">
+          <label htmlFor="image-upload" className="cursor-pointer block text-center">
+            <span className="text-teal-500 font-medium">Choose Image</span>
+            <Input
+              id="image-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+              disabled={uploading}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          </label>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      )}
+
+      {/* Profile Form */}
+      <div className="space-y-4">
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Name"
+          disabled={!editing}
+        />
+        <Input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          type="email"
+          disabled={!editing}
+        />
+
+        {!editing ? (
+          <Button
+            className="w-full bg-teal-500 hover:bg-teal-600"
+            onClick={() => setEditing(true)}
+          >
+            Edit Profile
+          </Button>
+        ) : (
+          <div className="flex gap-4">
+            <Button
+              className="flex-1 bg-teal-500 hover:bg-teal-600"
+              onClick={handleUpdate}
+              disabled={uploading}
+            >
+              {uploading ? "Saving..." : "Save Changes"}
+            </Button>
+            <Button
+              className="flex-1 bg-gray-300 hover:bg-gray-400 text-black"
+              onClick={handleCancel}
+              disabled={uploading}
+            >
+              Cancel
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
+export default Home;
