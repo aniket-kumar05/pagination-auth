@@ -26,7 +26,7 @@ const LoginForm = () => {
         </CardContent>
         <CardFooter className="flex justify-center text-slate-600 ">
           <p>
-            Don't have an account?{" "}
+            Do not have an account?
             <Link href="/register" className="text-teal-600 hover:underline">
               Register
             </Link>

@@ -1,9 +1,8 @@
-// components/Todo.tsx - WITH PAGINATION
 "use client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
-
+import { useCallback } from "react";
 interface Todo {
   _id: string;
   title: string;
@@ -28,54 +27,46 @@ export default function Todo() {
     totalPages: 1,
     totalTodos: 0,
     hasNext: false,
-    hasPrev: false
+    hasPrev: false,
   });
 
-  const fetchTodos = async (page: number = pagination.currentPage) => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      // Add page parameter to the URL
-      const response = await fetch(`/api/todos?page=${page}&limit=5`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      console.log("response", response);
-
-      let data;
+  const fetchTodos = useCallback(
+    async (page: number = pagination.currentPage) => {
       try {
-        data = await response.json();
-      } catch (err) {
-        console.error("Failed to parse JSON:", err);
-        data = null;
-      }
+        setLoading(true);
+        const token = localStorage.getItem("token");
+        if (!token) return;
 
-      if (response.ok && data) {
-        setTodos(data.todos);
-        setPagination({
-  ...data.pagination,
-  currentPage: page,   
-});
-        console.log("Pagination data:", data.pagination);
-      } else {
-        console.error("Error response from backend:", data);
+        const response = await fetch(`/api/todos?page=${page}&limit=5`, {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        let data;
+        try {
+          data = await response.json();
+        } catch (err) {
+          console.error("Error parsing response:", err);
+          data = null;
+        }
+
+        if (response.ok && data) {
+          setTodos(data.todos);
+          setPagination({ ...data.pagination, currentPage: page });
+        }
+      } catch (error) {
+        console.error("Error fetching todos:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching todos:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [pagination.currentPage]
+  ); // dependencies of fetchTodos
 
   useEffect(() => {
-    fetchTodos(1); 
-  }, []);
-console.log("pagination value",pagination)
+    fetchTodos(1);
+  }, [fetchTodos]);
+  console.log("pagination value", pagination);
   const addTodo = async () => {
     if (!newTodo.trim()) return;
 
@@ -105,37 +96,35 @@ console.log("pagination value",pagination)
     }
   };
 
-  // Toggle todo 
-const toggleTodo = async (id: string, completed: boolean) => {
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+  // Toggle todo
+  const toggleTodo = async (id: string, completed: boolean) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-    const response = await fetch(`/api/todos/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ completed: !completed }),
-    });
+      const response = await fetch(`/api/todos/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ completed: !completed }),
+      });
 
-    const data = await response.json();
-    console.log("Toggle todo response:", data);
+      const data = await response.json();
+      console.log("Toggle todo response:", data);
 
-    if (response.ok) {
-
-      setTodos(prev =>
-        prev.map(todo =>
-          todo._id === id ? { ...todo, completed: !completed } : todo
-        )
-      );
+      if (response.ok) {
+        setTodos((prev) =>
+          prev.map((todo) =>
+            todo._id === id ? { ...todo, completed: !completed } : todo
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling todo:", error);
     }
-  } catch (error) {
-    console.error("Error toggling todo:", error);
-  }
-};
-
+  };
 
   // Delete todo
   const deleteTodo = async (id: string) => {
@@ -178,9 +167,9 @@ const toggleTodo = async (id: string, completed: boolean) => {
       fetchTodos(pagination.currentPage + 1);
     }
   };
-  console.log("value of pagination",pagination)
+  console.log("value of pagination", pagination);
 
-  console.log("value of array",[...Array(pagination.totalPages)])
+  console.log("value of array", [...Array(pagination.totalPages)]);
   const goToPrevPage = () => {
     if (pagination.hasPrev) {
       fetchTodos(pagination.currentPage - 1);
@@ -190,19 +179,21 @@ const toggleTodo = async (id: string, completed: boolean) => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
       <h2 className="text-2xl font-bold mb-6">Todo App</h2>
-      
+
       {/* Add Todo Form */}
       <div className="bg-white p-6 rounded shadow-md w-full max-w-md mb-6">
         <div className="flex gap-2 items-center">
           <div className="flex-1">
-            <Label htmlFor="todo" className="sr-only">Todo</Label>
+            <Label htmlFor="todo" className="sr-only">
+              Todo
+            </Label>
             <input
               type="text"
               id="todo"
               value={newTodo || ""}
               onChange={(e) => setNewTodo(e.target.value)}
               placeholder="Add a new todo"
-              onKeyPress={(e) => e.key === 'Enter' && addTodo()}
+              onKeyPress={(e) => e.key === "Enter" && addTodo()}
             />
           </div>
           <Button
@@ -223,10 +214,9 @@ const toggleTodo = async (id: string, completed: boolean) => {
         ) : todos.length === 0 ? (
           <div className="text-center py-4">
             <p className="text-gray-500">
-              {pagination.currentPage > 1 
-                ? "No todos on this page" 
-                : "No todos yet. Add one above!"
-              }
+              {pagination.currentPage > 1
+                ? "No todos on this page"
+                : "No todos yet. Add one above!"}
             </p>
           </div>
         ) : (
@@ -236,21 +226,21 @@ const toggleTodo = async (id: string, completed: boolean) => {
                 <div
                   key={todo._id}
                   className={`bg-white p-4 rounded shadow border flex justify-between items-center ${
-                    todo.completed ? 'opacity-70' : ''
+                    todo.completed ? "opacity-70" : ""
                   }`}
                 >
                   <div className="flex items-center gap-3 flex-1">
                     <input
                       type="checkbox"
-                      checked={todo.completed}
+                      checked={!!todo.completed}
                       onChange={() => toggleTodo(todo._id, todo.completed)}
                       className="w-4 h-4 text-teal-500 rounded focus:ring-teal-400"
                     />
-                    <span 
+                    <span
                       className={`flex-1 ${
-                        todo.completed 
-                          ? 'line-through text-gray-500' 
-                          : 'text-gray-800'
+                        todo.completed
+                          ? "line-through text-gray-500"
+                          : "text-gray-800"
                       }`}
                     >
                       {todo.title}
@@ -283,20 +273,20 @@ const toggleTodo = async (id: string, completed: boolean) => {
                   <span className="text-sm text-gray-600">
                     Page {pagination.currentPage} of {pagination.totalPages}
                   </span>
-                  
+
                   {/* Page number buttons for quick navigation */}
                   <div className="flex gap-1">
                     {[...Array(pagination.totalPages)].map((_, index) => {
                       const pageNumber = index + 1;
-                      console.log("pageNumber",pageNumber)
+                      console.log("pageNumber", pageNumber);
                       return (
                         <Button
                           key={pageNumber}
                           onClick={() => goToPage(pageNumber)}
                           className={`w-8 h-8 text-sm ${
                             pageNumber === pagination.currentPage
-                              ? 'bg-teal-500 text-white'
-                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                              ? "bg-teal-500 text-white"
+                              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                           }`}
                           size="sm"
                         >
@@ -324,12 +314,13 @@ const toggleTodo = async (id: string, completed: boolean) => {
       {/* Stats */}
       <div className="mt-6 text-center text-gray-600">
         <p>
-          Total: {pagination.totalTodos} todo{pagination.totalTodos !== 1 ? 's' : ''} | 
-          Showing: {todos.length} on page {pagination.currentPage}
+          Total: {pagination.totalTodos} todo
+          {pagination.totalTodos !== 1 ? "s" : ""} | Showing: {todos.length} on
+          page {pagination.currentPage}
         </p>
         <p className="text-sm text-gray-500 mt-1">
-          Completed: {todos.filter(t => t.completed).length} | 
-          Pending: {todos.filter(t => !t.completed).length}
+          Completed: {todos.filter((t) => t.completed).length} | Pending:{" "}
+          {todos.filter((t) => !t.completed).length}
         </p>
       </div>
     </div>

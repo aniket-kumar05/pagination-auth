@@ -1,7 +1,5 @@
 
 import mongoose from "mongoose";
-import { title } from "process";
-import { trim } from "zod";
 
 const TodoSchema = new mongoose.Schema({
     title: {

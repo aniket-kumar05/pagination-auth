@@ -29,7 +29,8 @@ export async function POST(req: NextRequest) {
       } },
       { status: 201 }
     );
-  } catch (error: any) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
+  } catch (error) {
+    console.error("Error registering user:", error);
+    return NextResponse.json({ message: "Failed to register user" }, { status: 500 });
   }
 }

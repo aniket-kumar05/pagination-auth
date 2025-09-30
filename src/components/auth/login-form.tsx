@@ -65,8 +65,8 @@ export function Login() {
 
  
 
-  } catch (error: any) {
-    console.error(" Error:", error.message);
+  } catch (error) {
+    console.error("Login error:", error);
     toast.error("Login failed");
   } finally {
     setIsLoading(false);

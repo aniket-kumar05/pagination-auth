@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/models/user";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-const JWT_SECRET = process.env.JWT_SECRET as string;
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,9 +39,9 @@ export async function POST(req: NextRequest) {
       token,
       user: { id: user._id, name: user.name, email: user.email, image: user.image },
     });
-  } catch (err: any) {
-    console.error("Login Error:", err);
-    return NextResponse.json({ message: err.message }, { status: 500 });
+  } catch (error) {
+    console.error("Login Error:", error);
+    return NextResponse.json({ message: "Login failed" }, { status: 500 });
   }
 }
 

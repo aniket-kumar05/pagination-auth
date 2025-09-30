@@ -1,13 +1,13 @@
 
 import { connectDB } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
 import { Todo } from "@/models/todo";
 
 
 
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
@@ -40,6 +40,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ todo }, { status: 201 });
   } catch (error) {
+    console.log("error", error);
     return NextResponse.json(
       { error: "Failed to create todo" },
       { status: 500 }
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
 }
 
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     await connectDB();
     const authHeader = request.headers.get("Authorization");

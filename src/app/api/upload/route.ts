@@ -1,6 +1,6 @@
 // src/app/api/upload/route.ts
 import { v2 as cloudinary } from "cloudinary";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!,
@@ -8,7 +8,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const body = await req.formData();
     const file = body.get("file") as File;
@@ -34,8 +34,8 @@ export async function POST(req: Request) {
       url: result.secure_url 
     });
 
-  } catch (err: any) {
-    console.error("Upload error:", err);
-    return NextResponse.json({ message: err.message }, { status: 500 });
+  } catch (error) {
+    console.error("Upload error:", error);
+    return NextResponse.json({ message: "Failed to upload file" }, { status: 500 });
   }
 }

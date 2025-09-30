@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useUser } from "./hook/user";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 function Home() {
   const { user, setUser, isLoading } = useUser();
@@ -106,11 +107,13 @@ function Home() {
 
       {/* Profile Image */}
       <div className="flex flex-col items-center gap-3 mb-6">
-        <img
-          src={image || "/default-avatar.png"}
-          alt="Profile"
-          className="w-32 h-32 rounded-full object-cover border-2 border-gray-300"
-        />
+       <Image
+  src={image || "/default-avatar.png"}
+  alt="Profile"
+  width={128}
+  height={128}
+  className="rounded-full object-cover border-2 border-gray-300"
+/>
         {editing && (
           <p className="text-sm text-gray-500">
             {uploading ? "Uploading..." : "Click below to change photo"}
