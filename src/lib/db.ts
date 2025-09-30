@@ -8,7 +8,7 @@ if (!MONGO) {
   );
 }
 
-// Global cache object (prevents multiple connections in dev)
+
 let cached = (global as any).mongoose;
 
 if (!cached) {

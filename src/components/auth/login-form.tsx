@@ -58,9 +58,8 @@ export function Login() {
     }
 
 
-    console.log("✅ Login successful:", result);
+    console.log(" Login successful:", result);
 
-    // 1️⃣ Save token to localStorage or cookie
     localStorage.setItem("token", result.token);
 
  

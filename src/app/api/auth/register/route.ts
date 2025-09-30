@@ -4,12 +4,12 @@ import { User } from "@/models/user";
 
 export async function POST(req: NextRequest) {
   try {
-    await connectDB(); // ensure DB is connected
+    await connectDB(); 
 
     const body = await req.json();
     const { name, email, password } = body;
 
-    // Check if user already exists
+    
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return NextResponse.json(
@@ -18,7 +18,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create new user (password will be hashed automatically)
     const user = await User.create({ name, email, password });
 
     return NextResponse.json(

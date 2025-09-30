@@ -69,7 +69,7 @@ export function Register() {
         }),
       });
       const result = await res.json();
-      console.log("✅ Registered:", result);
+      console.log(" Registered:", result);
       if (!res.ok) {
         throw new Error("Failed to register");
       }else{
